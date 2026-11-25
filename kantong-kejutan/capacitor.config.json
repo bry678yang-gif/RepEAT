@@ -1,0 +1,8 @@
+{
+  "appId": "id.kantongkejutan.demo",
+  "appName": "RepEAT",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

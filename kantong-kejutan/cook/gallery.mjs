@@ -1,0 +1,11 @@
+import { createRequire } from 'node:module';
+const { chromium } = createRequire(import.meta.url)('/opt/npm-tools/node_modules/playwright');
+const b = await chromium.launch(); const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1.5 })).newPage();
+await p.goto('http://localhost:8080/'); await p.evaluate(() => localStorage.clear()); await p.reload();
+await p.click('[data-role=pembeli]');
+const y0 = await p.evaluate(() => document.getElementById('list').getBoundingClientRect().top + scrollY);
+const h = await p.evaluate(() => document.getElementById('app').scrollHeight);
+await p.addStyleTag({ content: '.nav{display:none!important}' });
+await p.setViewportSize({ width: 390, height: Math.round(h - y0 + 20) });
+await p.evaluate(y => scrollTo(0, y - 10), y0);
+await p.screenshot({ path: 'cook/stills/r02/gallery.png' }); await b.close();

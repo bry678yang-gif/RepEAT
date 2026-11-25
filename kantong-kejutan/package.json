@@ -1,0 +1,19 @@
+{
+  "name": "repeat-surabaya",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Prototipe demo lomba: RepEAT Surabaya (offline, data demo)",
+  "scripts": {
+    "test": "node --test test/logic.test.js test/android.test.js",
+    "serve": "python3 -m http.server 8080 --directory www",
+    "test:ui": "node test/ui-smoke.mjs",
+    "test:fitur": "node test/ui-features.mjs",
+    "test:upgrade": "node test/ui-upgrade.mjs",
+    "test:native": "node test/ui-native.mjs",
+    "android:setup": "node scripts/android-setup.mjs",
+    "android:add": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  }
+}
