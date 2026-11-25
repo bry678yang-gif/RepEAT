@@ -1,0 +1,31 @@
+
+name: Import RepEAT ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract RepEAT
+        run: |
+          unzip -q RepEAT-GitHub-Ready.zip -d extracted
+          cp -a extracted/kantong-kejutan/. .
+          rm -rf extracted
+          rm RepEAT-GitHub-Ready.zip
+
+      - name: Save project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import RepEAT project"
+          git push
