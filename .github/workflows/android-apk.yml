@@ -1,0 +1,50 @@
+
+name: Build RepEAT APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Extract project ZIP
+        run: |
+          unzip -q RepEAT-GitHub-Ready.zip -d extracted
+          test -f extracted/kantong-kejutan/package.json
+
+      - name: Install and setup Android
+        working-directory: extracted/kantong-kejutan
+        run: npm run android:setup
+
+      - name: Build APK
+        working-directory: extracted/kantong-kejutan/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RepEAT-APK
+          path: extracted/kantong-kejutan/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
