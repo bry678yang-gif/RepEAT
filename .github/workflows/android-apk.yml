@@ -25,61 +25,85 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          check-latest: true
 
-      - name: Verify Java Version
+      - name: Verify Java
         run: |
-          echo "JAVA_HOME=$JAVA_HOME"
           java -version
           javac -version
-          
+
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Extract project ZIP
+      - name: Extract latest RepEAT
         run: |
-          unzip -q RepEAT-GitHub-Ready.zip -d extracted
+          unzip -q "RepEAT-GitHub-Ready.zip" -d extracted
           test -f extracted/kantong-kejutan/package.json
 
-      - name: Install and setup Android
+      - name: Install Android dependencies
         working-directory: extracted/kantong-kejutan
         run: npm run android:setup
 
-      - name: Add Maven mirror
+      - name: Configure Maven mirrors
         working-directory: extracted/kantong-kejutan
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          p = Path("android/build.gradle")
-          s = p.read_text()
+          files = [
+              Path("android/build.gradle"),
+              Path("android/settings.gradle"),
+          ]
 
-          mirror = 'maven { url "https://maven.aliyun.com/repository/central" }'
+          mirrors = {
+              "google()": "https://maven.aliyun.com/repository/google",
+              "mavenCentral()": "https://maven.aliyun.com/repository/central",
+          }
 
-          s = re.sub(
-              r'(?m)^(\s*)mavenCentral\(\)\s*$',
-              lambda m: f'{m.group(1)}{mirror}\n{m.group(1)}mavenCentral()',
-              s
-          )
+          for path in files:
+              if not path.exists():
+                  continue
 
-          p.write_text(s)
+              content = path.read_text()
+
+              for original, url in mirrors.items():
+                  pattern = re.compile(
+                      r"(?m)^(\s*)" + re.escape(original) + r"\s*$"
+                  )
+
+                  def replace(match):
+                      indent = match.group(1)
+                      return (
+                          indent + "maven { url '" + url + "' }\n"
+                          + indent + original
+                      )
+
+                  content = pattern.sub(replace, content)
+
+              path.write_text(content)
+
+          print("Maven mirrors configured.")
           PY
 
-      - name: Build APK
+      - name: Build Android APK
         working-directory: extracted/kantong-kejutan/android
         run: |
           chmod +x gradlew
+          java -version
+          javac -version
 
           for attempt in 1 2 3; do
+            echo "Build attempt $attempt"
+
             ./gradlew --no-daemon --max-workers=2 assembleDebug && exit 0
-            echo "Build gagal. Mencoba ulang..."
+
+            echo "Build failed. Retrying in 30 seconds..."
             sleep 30
           done
 
           exit 1
 
-      - name: Upload APK
+      - name: Upload RepEAT APK
         uses: actions/upload-artifact@v4
         with:
           name: RepEAT-APK
