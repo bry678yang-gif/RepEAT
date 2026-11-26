@@ -36,8 +36,18 @@ jobs:
 
       - name: Extract latest RepEAT
         run: |
-          unzip -q "RepEAT-GitHub-Ready.zip" -d extracted
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname 'RepEAT-GitHub-Ready*.zip' | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: File ZIP RepEAT tidak ditemukan!"
+            ls -lah
+            exit 1
+          fi
+
+          echo "Menggunakan file: $ZIP_FILE"
+          unzip -q "$ZIP_FILE" -d extracted
           test -f extracted/kantong-kejutan/package.json
+
 
       - name: Install Android dependencies
         working-directory: extracted/kantong-kejutan
