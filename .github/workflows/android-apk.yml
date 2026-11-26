@@ -33,20 +33,13 @@ jobs:
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
-
+        
       - name: Extract latest RepEAT
         run: |
-          ZIP_FILE=$(find . -maxdepth 1 -type f -iname 'RepEAT-GitHub-Ready*.zip' | head -n 1)
-
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: File ZIP RepEAT tidak ditemukan!"
-            ls -lah
-            exit 1
-          fi
-
-          echo "Menggunakan file: $ZIP_FILE"
-          unzip -q "$ZIP_FILE" -d extracted
+          unzip -t RepEAT-source.zip
+          unzip -q RepEAT-source.zip -d extracted
           test -f extracted/kantong-kejutan/package.json
+          echo "RepEAT ZIP berhasil diekstrak!"
 
 
       - name: Install Android dependencies
