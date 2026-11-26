@@ -25,6 +25,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Extract project ZIP
         run: |
@@ -60,7 +63,14 @@ jobs:
         working-directory: extracted/kantong-kejutan/android
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --max-workers=2 assembleDebug
+
+          for attempt in 1 2 3; do
+            ./gradlew --no-daemon --max-workers=2 assembleDebug && exit 0
+            echo "Build gagal. Mencoba ulang..."
+            sleep 30
+          done
+
+          exit 1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
