@@ -35,40 +35,21 @@ jobs:
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check and Extract RepEAT ZIP
+      - name: Diagnose RepEAT ZIP
         run: |
-          echo "Checking ZIP file..."
-
-          if [ ! -f "RepEAT-last.zip" ]; then
-            echo "ERROR: RepEAT-last.zip tidak ditemukan!"
-            echo "File yang tersedia:"
-            ls -lah
-            exit 1
-          fi
-
+          echo "=== FILE INFORMATION ==="
+          ls -lah RepEAT-last.zip
+      
+          echo "=== FILE TYPE ==="
           file RepEAT-last.zip
-          ls -lh RepEAT-last.zip
-
-          if ! unzip -tq RepEAT-last.zip; then
-            echo "ERROR: RepEAT-last.zip bukan ZIP valid atau rusak."
-            exit 1
-          fi
-
-          mkdir -p extracted
-          unzip -q RepEAT-last.zip -d extracted
-
-          if [ -f extracted/kantong-kejutan/package.json ]; then
-            PROJECT_DIR="extracted/kantong-kejutan"
-          elif [ -f extracted/package.json ]; then
-            PROJECT_DIR="extracted"
-          else
-            echo "ERROR: package.json tidak ditemukan."
-            find extracted -maxdepth 3 -type f | head -50
-            exit 1
-          fi
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "RepEAT berhasil diekstrak!"
+      
+          echo "=== FIRST 100 BYTES ==="
+          head -c 100 RepEAT-last.zip | xxd
+      
+          echo "=== ZIP VALIDATION ==="
+          unzip -t RepEAT-last.zip
+      
+          echo "=== END DIAGNOSTIC ==="
 
       - name: Install Android dependencies
         run: npm run android:setup
