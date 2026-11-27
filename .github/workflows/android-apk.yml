@@ -52,16 +52,16 @@ jobs:
           echo "=== END DIAGNOSTIC ==="
 
       - name: Install Android dependencies
+        working-directory: extracted/kantong-kejutan
         run: npm run android:setup
-        working-directory: ${{ env.PROJECT_DIR }}
 
-      - name: Build Android APK
-        working-directory: ${{ env.PROJECT_DIR }}/android
-        run: |
-          chmod +x gradlew
-          java -version
-          javac -version
-          ./gradlew --no-daemon --max-workers=2 assembleDebug
+      - name: Upload RepEAT APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RepEAT-APK
+          path: extracted/kantong-kejutan/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload RepEAT APK
         uses: actions/upload-artifact@v4
