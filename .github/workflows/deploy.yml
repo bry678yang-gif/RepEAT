@@ -30,7 +30,7 @@ jobs:
 
       - name: Extract RepEAT project
         run: |
-          unzip -q RepEAT-source.zip -d extracted
+          unzip -q RepEAT-last.zip -d extracted
           test -f extracted/kantong-kejutan/www/index.html
 
       - name: Setup GitHub Pages
