@@ -36,10 +36,10 @@ jobs:
         
       - name: Extract latest RepEAT
         run: |
-          unzip -t RepEAT-last.zip
+          mkdir -p extracted
+          unzip -q RepEAT-last.zip -d extracted
           test -f extracted/kantong-kejutan/package.json
           echo "RepEAT ZIP berhasil diekstrak!"
-
 
       - name: Install Android dependencies
         working-directory: extracted/kantong-kejutan
