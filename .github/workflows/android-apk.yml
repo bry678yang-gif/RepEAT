@@ -25,6 +25,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          check-latest: true
 
       - name: Verify Java
         run: |
@@ -33,82 +34,58 @@ jobs:
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
-        
-      - name: Extract latest RepEAT
+
+      - name: Check and Extract RepEAT ZIP
         run: |
+          echo "Checking ZIP file..."
+
+          if [ ! -f "RepEAT-last.zip" ]; then
+            echo "ERROR: RepEAT-last.zip tidak ditemukan!"
+            echo "File yang tersedia:"
+            ls -lah
+            exit 1
+          fi
+
+          file RepEAT-last.zip
+          ls -lh RepEAT-last.zip
+
+          if ! unzip -tq RepEAT-last.zip; then
+            echo "ERROR: RepEAT-last.zip bukan ZIP valid atau rusak."
+            exit 1
+          fi
+
           mkdir -p extracted
           unzip -q RepEAT-last.zip -d extracted
-          test -f extracted/kantong-kejutan/package.json
-          echo "RepEAT ZIP berhasil diekstrak!"
+
+          if [ -f extracted/kantong-kejutan/package.json ]; then
+            PROJECT_DIR="extracted/kantong-kejutan"
+          elif [ -f extracted/package.json ]; then
+            PROJECT_DIR="extracted"
+          else
+            echo "ERROR: package.json tidak ditemukan."
+            find extracted -maxdepth 3 -type f | head -50
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "RepEAT berhasil diekstrak!"
 
       - name: Install Android dependencies
-        working-directory: extracted/kantong-kejutan
         run: npm run android:setup
-
-      - name: Configure Maven mirrors
-        working-directory: extracted/kantong-kejutan
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          files = [
-              Path("android/build.gradle"),
-              Path("android/settings.gradle"),
-          ]
-
-          mirrors = {
-              "google()": "https://maven.aliyun.com/repository/google",
-              "mavenCentral()": "https://maven.aliyun.com/repository/central",
-          }
-
-          for path in files:
-              if not path.exists():
-                  continue
-
-              content = path.read_text()
-
-              for original, url in mirrors.items():
-                  pattern = re.compile(
-                      r"(?m)^(\s*)" + re.escape(original) + r"\s*$"
-                  )
-
-                  def replace(match):
-                      indent = match.group(1)
-                      return (
-                          indent + "maven { url '" + url + "' }\n"
-                          + indent + original
-                      )
-
-                  content = pattern.sub(replace, content)
-
-              path.write_text(content)
-
-          print("Maven mirrors configured.")
-          PY
+        working-directory: ${{ env.PROJECT_DIR }}
 
       - name: Build Android APK
-        working-directory: extracted/kantong-kejutan/android
+        working-directory: ${{ env.PROJECT_DIR }}/android
         run: |
           chmod +x gradlew
           java -version
           javac -version
-
-          for attempt in 1 2 3; do
-            echo "Build attempt $attempt"
-
-            ./gradlew --no-daemon --max-workers=2 assembleDebug && exit 0
-
-            echo "Build failed. Retrying in 30 seconds..."
-            sleep 30
-          done
-
-          exit 1
+          ./gradlew --no-daemon --max-workers=2 assembleDebug
 
       - name: Upload RepEAT APK
         uses: actions/upload-artifact@v4
         with:
           name: RepEAT-APK
-          path: extracted/kantong-kejutan/android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.PROJECT_DIR }}/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
