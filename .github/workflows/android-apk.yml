@@ -36,7 +36,7 @@ jobs:
         
       - name: Extract latest RepEAT
         run: |
-          unzip -t RepEAT-source.zip
+          unzip -t RepEAT-last.zip
           test -f extracted/kantong-kejutan/package.json
           echo "RepEAT ZIP berhasil diekstrak!"
 
